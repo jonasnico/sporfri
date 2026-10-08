@@ -1,0 +1,23 @@
+name: Test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6 # version from "packageManager" in package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+      - name: Generated files are up to date
+        run: |
+          pnpm build
+          git diff --exit-code -- chrome-extension ios || (echo "::error::Run 'pnpm build' and commit the result" && exit 1)

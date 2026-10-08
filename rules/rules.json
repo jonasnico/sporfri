@@ -1,0 +1,126 @@
+{
+  "formatVersion": 1,
+  "global": {
+    "params": {
+      "Google / ads": ["gclid", "gclsrc", "dclid", "gbraid", "wbraid", "gad_source", "gad_campaignid", "srsltid", "_ga", "_gl"],
+      "Meta": ["fbclid", "igshid", "igsh", "mibextid"],
+      "Microsoft, Yandex, X, TikTok, LinkedIn": ["msclkid", "yclid", "ysclid", "twclid", "ttclid", "li_fat_id"],
+      "E-mail / marketing automation": [
+        "mc_cid", "mc_eid", "_hsenc", "_hsmi", "__hssc", "__hstc", "__hsfp", "hsctatracking", "mkt_tok",
+        "vero_id", "vero_conv", "wickedid", "_kx", "oly_anon_id", "oly_enc_id", "rb_clickid", "s_cid", "sc_cid",
+        "ncid", "cmpid", "_bta_tid", "_bta_c", "trk_contact", "trk_msg", "trk_module", "trk_sid"
+      ],
+      "Affiliates": ["irclickid", "irgwc", "zanpid", "ranmid", "raneaid", "ransiteid"],
+      "Misc": [
+        "ref_src", "ref_url", "spm", "scm", "_openstat", "guccounter", "guce_referrer", "guce_referrer_sig",
+        "fb_action_ids", "fb_action_types", "fb_ref", "fb_source", "action_object_map", "action_type_map",
+        "action_ref_map", "at_medium", "at_campaign"
+      ]
+    },
+    "prefixes": ["utm_", "pk_", "mtm_", "hsa_"],
+    "utmDuplicates": ["source", "medium", "campaign", "content", "term"],
+    "hashPatterns": ["^#(utm_[a-z]+|xtor|at_medium)="]
+  },
+  "sites": [
+    {
+      "name": "YouTube short links",
+      "domains": ["youtu.be"],
+      "keep": ["t", "list", "index"]
+    },
+    {
+      "name": "YouTube",
+      "domains": ["youtube.com", "youtube-nocookie.com"],
+      "remove": ["si", "is", "pp", "feature", "ab_channel", "embeds_referring_euri", "embeds_referring_origin", "source_ve_path"]
+    },
+    {
+      "name": "Spotify",
+      "domains": ["spotify.com"],
+      "remove": ["si", "nd", "context", "_branch_match_id", "_branch_referrer"]
+    },
+    {
+      "name": "X / Twitter",
+      "domains": ["twitter.com", "x.com"],
+      "remove": ["s", "t", "cn"]
+    },
+    {
+      "name": "Instagram",
+      "domains": ["instagram.com"],
+      "remove": ["igsh", "igshid"]
+    },
+    {
+      "name": "Facebook",
+      "domains": ["facebook.com", "fb.watch"],
+      "remove": ["rdid", "share_url", "sfnsn", "ref", "fref", "hc_ref", "refsrc", "paipv", "eav", "extid"],
+      "removePrefixes": ["__cft__", "__tn__", "__xts__"]
+    },
+    {
+      "name": "Threads",
+      "domains": ["threads.net", "threads.com"],
+      "remove": ["xmt", "slof"]
+    },
+    {
+      "name": "TikTok",
+      "domains": ["tiktok.com"],
+      "remove": [
+        "_r", "_t", "_d", "is_from_webapp", "sender_device", "web_id", "is_copy_url", "share_app_id",
+        "share_link_id", "share_item_id", "social_sharing", "sec_user_id", "u_code", "preview_pb", "timestamp",
+        "user_id", "tt_from", "enter_method", "checksum", "sender_web_id", "refer", "referer_url", "referer_video_id"
+      ]
+    },
+    {
+      "name": "LinkedIn",
+      "domains": ["linkedin.com"],
+      "remove": ["trackingid", "refid", "lipi", "trk", "trkinfo", "midtoken", "midsig", "eid", "otptoken", "rcm", "originalsubdomain", "lici"]
+    },
+    {
+      "name": "Reddit",
+      "domains": ["reddit.com"],
+      "remove": ["share_id", "rdt", "ref", "ref_source", "ref_campaign", "correlation_id"]
+    },
+    {
+      "name": "Medium",
+      "domains": ["medium.com"],
+      "remove": ["source"]
+    },
+    {
+      "name": "Substack",
+      "domains": ["substack.com"],
+      "remove": ["r", "triedredirect", "publication_id", "post_id", "isfreemail", "showwelcomeonshare"]
+    },
+    {
+      "name": "eBay",
+      "domains": ["ebay.com", "ebay.co.uk", "ebay.de"],
+      "remove": ["_trkparms", "_trksid", "amdata", "mkcid", "mkrid", "campid", "toolid", "customid", "mkevt"]
+    },
+    {
+      "name": "Amazon",
+      "hostPattern": "(^|\\.)amazon\\.[a-z]{2,3}(\\.[a-z]{2})?$",
+      "remove": [
+        "ref", "ref_", "_encoding", "psc", "content-id", "tag", "linkcode", "linkid", "creative", "creativeasin",
+        "ascsubtag", "qid", "sr", "sprefix", "crid", "dib", "dib_tag", "social_share", "starsleft",
+        "skiptwisterog", "titlesource", "smid", "th", "sp_csd", "spla"
+      ],
+      "removePrefixes": ["pf_rd_", "pd_rd_"],
+      "pathReplace": [{ "pattern": "/ref=[^/]*$", "with": "" }]
+    },
+    {
+      "name": "Google Search",
+      "hostPattern": "(^|\\.)google\\.[a-z]{2,3}(\\.[a-z]{2})?$",
+      "pathPattern": "^/search$",
+      "remove": [
+        "ved", "ei", "sa", "usg", "sxsrf", "oq", "gs_lp", "gs_lcrp", "gs_lcp", "gs_ssp", "sclient", "uact", "bih",
+        "biw", "sourceid", "ie", "aqs", "rlz", "iflsig", "sca_esv", "sca_upv", "source", "dpr", "uds", "prmd",
+        "fbs", "client", "sei", "mstk", "csui"
+      ]
+    }
+  ],
+  "redirects": [
+    { "name": "Google", "hostPattern": "(^|\\.)google\\.[a-z]{2,3}(\\.[a-z]{2})?$", "pathPattern": "^/url$", "params": ["q", "url"] },
+    { "name": "Facebook", "hostPattern": "^(l|lm)\\.facebook\\.com$", "pathPattern": "^/l\\.php$", "params": ["u"] },
+    { "name": "Instagram", "domains": ["l.instagram.com"], "params": ["u"] },
+    { "name": "YouTube", "domains": ["youtube.com"], "pathPattern": "^/redirect$", "params": ["q"] },
+    { "name": "LinkedIn", "domains": ["linkedin.com"], "pathPattern": "^/redir/", "params": ["url"] },
+    { "name": "Steam", "domains": ["steamcommunity.com"], "pathPattern": "^/linkfilter", "params": ["url", "u"] },
+    { "name": "Reddit", "domains": ["out.reddit.com"], "params": ["url"] }
+  ]
+}

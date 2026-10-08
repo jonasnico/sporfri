@@ -1,0 +1,22 @@
+{
+  "name": "sporfri",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Sporfri — strip tracking parameters from links. Chrome extension + iPhone (Scriptable/Shortcuts).",
+  "packageManager": "pnpm@11.24.0",
+  "engines": {
+    "node": ">=26"
+  },
+  "scripts": {
+    "build": "node --disable-warning=ExperimentalWarning scripts/build.mjs",
+    "install-ios": "node --disable-warning=ExperimentalWarning scripts/build.mjs --install-ios",
+    "check": "node scripts/check.mjs",
+    "icons": "node scripts/make-icons.mjs",
+    "test": "node --test test/*.test.mjs",
+    "typecheck": "tsc -p ."
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
+}

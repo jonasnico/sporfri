@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Sporfri — Options</title>
+  <style>
+    :root { color-scheme: light dark; font: 15px/1.5 system-ui, sans-serif; }
+    body { max-width: 640px; margin: 40px auto; padding: 0 20px; }
+    h1 { font-size: 22px; margin-bottom: 4px; }
+    p.lead { margin-top: 0; opacity: .7; }
+    fieldset { border: 1px solid #8884; border-radius: 10px; padding: 12px 16px; margin: 20px 0; }
+    legend { font-weight: 600; padding: 0 6px; }
+    label.check { display: flex; gap: 10px; align-items: flex-start; margin: 10px 0; }
+    label.check small, .hint { display: block; opacity: .65; font-size: 13px; }
+    textarea, input[type=url] { width: 100%; box-sizing: border-box; font: 13px ui-monospace, monospace; padding: 8px; border-radius: 6px; border: 1px solid #8886; }
+    textarea { min-height: 60px; resize: vertical; }
+    output { display: block; word-break: break-all; font: 13px ui-monospace, monospace; padding: 8px; border-radius: 6px; background: #8881; min-height: 1.5em; margin-top: 8px; }
+    #status { height: 1.5em; color: #16a34a; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <h1>Sporfri</h1>
+  <p class="lead">Click the toolbar icon or press <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> to copy the clean URL of the current tab.</p>
+
+  <fieldset>
+    <legend>Behaviour</legend>
+    <label class="check"><input type="checkbox" id="cleanOnCopy" />
+      <span>Clean links when copying<small>Selected links and sites’ own “Copy link” buttons.</small></span></label>
+    <label class="check"><input type="checkbox" id="cleanAddressBar" />
+      <span>Clean the address bar when opening tracked links<small>So copying from the address bar gives a clean URL.</small></span></label>
+    <label class="check"><input type="checkbox" id="removeTrailingSlash" />
+      <span>Remove trailing slash<small><code>…/article/</code> → <code>…/article</code></small></span></label>
+    <label class="check"><input type="checkbox" id="unwrapRedirects" />
+      <span>Unwrap redirect links<small>Google, Facebook, Instagram, YouTube, LinkedIn “leaving site” links.</small></span></label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Custom rules</legend>
+    <label for="extraParams">Extra parameters to remove</label>
+    <span class="hint">Comma or newline separated, e.g. <code>ref, source</code></span>
+    <textarea id="extraParams"></textarea>
+    <br /><br />
+    <label for="excludedDomains">Never touch these domains</label>
+    <span class="hint">Subdomains are included, e.g. <code>example.com</code></span>
+    <textarea id="excludedDomains"></textarea>
+  </fieldset>
+
+  <fieldset>
+    <legend>Try it</legend>
+    <input type="url" id="tester" placeholder="Paste a URL…" />
+    <output id="result"></output>
+    <span class="hint" id="summary"></span>
+  </fieldset>
+
+  <div id="status"></div>
+  <script src="sporfri.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>
