@@ -1,6 +1,6 @@
 # Sporfri
 
-*Sporfri* is Norwegian for "track-free". It strips tracking and ad junk (`utm_*`, `fbclid`, `si`, `igsh`, …) from links, on iPhone and in Chrome.
+Removes tracking parameters from links, on iPhone and in Chrome. *Sporfri* is Norwegian for "track-free".
 
 ```
 https://cybernews.com/security/smart-coffee-maker…-data/?utm_source=cn_ytcommunity&utm_medium=social&…&source=cn_ytcommunity&…
@@ -11,99 +11,96 @@ https://www.instagram.com/reel/C1a2b3/?igsh=MWx0…  →  https://www.instagram.
 https://x.com/user/status/123?s=46&t=AbCd          →  https://x.com/user/status/123
 ```
 
-All site knowledge lives in one data file, [`rules/rules.json`](rules/rules.json), which you own and maintain
-(see [`rules/README.md`](rules/README.md)). A small generic engine written in TypeScript, [`src/engine.ts`](src/engine.ts), applies it.
-Both platforms share them:
+## How it works
 
-- **Global trackers**, removed on every site: `utm_*`, `fbclid`, `gclid`, `msclkid`, `mc_eid`, …
-- **Site rules** for YouTube, Instagram, Facebook, X, TikTok, Threads, Spotify, Reddit, LinkedIn, Amazon, Google and others.
-- **Duplicate params**: plain `source=`/`medium=`/`campaign=`… are removed only when they repeat a `utm_` value (the Cybernews case).
-- **Redirect wrappers** such as `google.com/url?q=…` and `l.facebook.com/l.php?u=…` are replaced by the real link.
-- **Trailing slash** is removed (optional).
+The rules are in [`rules/rules.json`](rules/rules.json) ([format](rules/README.md)), and a small engine,
+[`src/engine.ts`](src/engine.ts), applies them. iPhone and Chrome share both.
 
-## iPhone (Scriptable + Shortcuts)
+Sporfri removes:
+- Trackers found on every site: `utm_*`, `fbclid`, `gclid`, `msclkid`, …
+- Site-specific parameters on YouTube, Instagram, Facebook, X, TikTok, Threads, Spotify, Reddit, LinkedIn, Amazon and more.
+- `source=`, `medium=`, … when they repeat a `utm_` value.
+- Redirect wrappers such as `google.com/url?q=…`, leaving the real link.
+- The trailing slash (optional).
 
-iOS won't let any app rewrite the clipboard automatically, so you trigger the cleaning with one tap. There are two triggers:
-- **Share sheet**: in any app, tap Share → **Sporfri**.
-- **Back Tap**: tap the app's own "Copy link", then double-tap the back of the phone.
+## iPhone
 
-Either way, the clean link ends up on the clipboard, and a notification shows it along with what was
-removed and kept, e.g. `Removed: si · Kept: t`. If something suspicious was kept, add a rule for it (see below).
+iOS doesn't let apps change the clipboard in the background, so you run Sporfri yourself:
+- In any app, tap **Share → Sporfri**.
+- Or tap **Copy link**, then double-tap the back of the phone.
 
-### 1. Install the script
-1. Install [Scriptable](https://apps.apple.com/app/scriptable/id1405459188) (free) on the iPhone.
-2. Get `ios/Sporfri.js` into Scriptable, using either:
-   - **Mac with the same iCloud account:** run `pnpm install-ios`. The script syncs to the phone.
-   - **Manually:** in Scriptable tap **+**, paste the contents of `ios/Sporfri.js`, and name it `Sporfri`.
-3. Run it once inside Scriptable and allow notifications.
+The clean link is copied, and a notification shows what was removed, e.g. `Removed: si · Kept: t`.
 
-### 2. Create the shortcut
-In the **Shortcuts** app, tap **+** and name it **Sporfri**:
+### Setup
 
-1. Tap the **ⓘ** (details) button and turn on **Show in Share Sheet**.
-2. Set the top block to: *Receive* **URLs and Text** *from* **Share Sheet**. *If there's no input:* **Get Clipboard**.
-3. Add the Scriptable action **Run Script**:
-   - Script: **Sporfri**
-   - Parameter: **Shortcut Input**
-   - Turn **off** "Show When Run"
+1. Install [Scriptable](https://apps.apple.com/app/scriptable/id1405459188).
+2. Add the script, using either:
+   - a Mac signed in to the same iCloud account: run `pnpm install-ios`
+   - Scriptable itself: tap **+**, paste in [`ios/Sporfri.js`](ios/Sporfri.js), and name it **Sporfri**
+3. Run the script once in Scriptable and allow notifications.
+4. In **Shortcuts**, create a shortcut named **Sporfri**:
+   1. Tap **ⓘ** and turn on **Show in Share Sheet**.
+   2. In the top block, receive **URLs** and **Text** from the **Share Sheet**. If there's no input: **Get Clipboard**.
+   3. Add **Copy to Clipboard**.
+   4. Add Scriptable's **Run Script** with the script **Sporfri**. Leave the parameter empty, and turn off **Show When Run**.
+5. Go to Settings → Accessibility → Touch → **Back Tap** → **Double Tap**, and choose **Sporfri**.
 
-That's the whole shortcut. The script itself copies the cleaned link and shows the notification.
+The script reads the link from the clipboard, which is why step 4.3 copies shared links there first.
+Allow clipboard access when iOS asks.
 
-### 3. Back Tap
-Settings → Accessibility → Touch → **Back Tap** → **Double Tap** → choose the **Sporfri** shortcut.
+Settings (trailing slash, extra parameters, excluded domains) are in the `SETTINGS` block at the top of the script.
 
-The first time, iOS asks whether Shortcuts may read the clipboard. Choose **Always Allow**.
-
-Tips:
-- **YouTube app:** Share → scroll the app row → **More** → **Sporfri**. You can also tap Copy link and then use Back Tap.
-- **Instagram / Facebook / TikTok:** their in-app "Copy link" plus Back Tap is the fastest route.
-- **Change settings** (trailing slash, extra params, excluded domains) in the `SETTINGS` block at the top of the script in Scriptable.
-
-## Chrome extension (desktop)
+## Chrome
 
 1. Open `chrome://extensions` and turn on **Developer mode**.
 2. Click **Load unpacked** and select the `chrome-extension/` folder.
 
 What it does:
-- **Address bar:** when you open a tracked link, the junk is removed from the address bar. Copying from it then gives a clean URL.
-- **Copying:** selecting and copying a link, or using a site's own **Copy link** button (YouTube, Instagram, …), puts the clean version on the clipboard.
-- **Toolbar icon** or <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> copies the clean URL of the current tab.
-- **Right-click** a link → **Copy clean link**.
-- **Options** (right-click the icon → Options) has toggles, custom params to strip, excluded domains and a live tester that shows what was removed and kept.
+- Removes tracking from the address bar when you open a link.
+- Cleans links you copy, including from a site's own **Copy link** button.
+- The toolbar icon, or <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd>, copies the current page's clean URL.
+- Right-click a link and choose **Copy clean link**.
+- **Options** has toggles, extra parameters, excluded domains and a tester.
 
 ## Development
 
-Requires Node 26 (see `.nvmrc`) and pnpm. The only dependency is TypeScript, used for type checking
-during development. The extension and the iPhone script don't depend on anything.
+Requires Node 26 and pnpm.
 
 ```sh
-pnpm install      # once, installs TypeScript
-pnpm test         # engine tests + before/after examples for every rule
-pnpm typecheck    # strict TypeScript check of src/engine.ts
-pnpm build        # regenerate chrome-extension/{sporfri,main-world}.js and ios/Sporfri.js
-pnpm check 'https://…'    # see how a URL is cleaned; flags leftover params that look like tracking
-pbpaste | pnpm check      # same, for whatever is on the clipboard
-pnpm icons        # regenerate the extension icons
+pnpm install
+pnpm test                 # build, then run all tests
+pnpm typecheck
+pnpm build                # regenerate the extension and iPhone scripts
+pnpm check 'https://…'    # show what's removed, and flag leftover parameters that look like tracking
+pbpaste | pnpm check      # same, for the clipboard
+pnpm icons                # regenerate the extension icons
 ```
 
-To add a rule:
+### Adding a rule
+
 1. Edit `rules/rules.json`.
-2. Add a before/after example in [`test/cases.json`](test/cases.json).
-3. Run `pnpm test && pnpm build`.
+2. Add an example to [`test/cases.json`](test/cases.json).
+3. Run `pnpm test`.
+4. Reload the extension in `chrome://extensions`, and run `pnpm install-ios`.
 
-After that, click reload on `chrome://extensions` for the extension, and run `pnpm install-ios` again for the iPhone.
-GitHub Actions type-checks and tests every push, and checks that the generated files are up to date.
+CI type-checks and tests every push. It also fails if the generated files are out of date.
 
-The engine is TypeScript, but there is no compile step: Node 26 runs `.ts` files directly, and the
-build strips the types with Node's built-in `stripTypeScriptTypes`. Only "erasable" syntax is allowed
-(types, interfaces, `as`; no `enum`/`namespace`), and the build refuses anything it can't convert safely.
+### TypeScript
+
+There's no compile step. Node 26 runs `engine.ts` directly, and the build strips the types with Node's
+built-in `stripTypeScriptTypes`. This only works with erasable syntax: types, interfaces and `as`, but
+no `enum` or `namespace`. The build fails on anything it can't convert.
+
+The engine doesn't use web APIs such as `URL`, because Scriptable doesn't provide them.
+
+### Layout
 
 ```
-rules/rules.json       your rules (data only) — rules/README.md documents the format
-src/engine.ts          generic engine: createCleaner(rules) → analyzeUrl / cleanUrl / analyzeText / cleanText
-src/*-main*.js         platform glue (Chrome page world, Scriptable)
-test/cases.json        language-neutral spec: before/after examples every implementation must pass
-test/*.test.mjs        engine tests + runner for cases.json
-chrome-extension/      the extension (sporfri.js and main-world.js are generated)
-ios/Sporfri.js         generated Scriptable script
+rules/rules.json      rules (data only)
+src/engine.ts         engine: createCleaner(rules) → analyzeUrl, cleanUrl, analyzeText, cleanText
+src/*-main*.js        platform code for Chrome's page world and Scriptable
+test/cases.json       before/after examples, usable by any implementation
+test/*.test.mjs       engine tests, the cases.json runner, and bundle tests
+chrome-extension/     the extension (sporfri.js and main-world.js are generated)
+ios/Sporfri.js        the Scriptable script (generated)
 ```

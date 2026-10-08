@@ -61,6 +61,20 @@ test('settings lists accept comma/newline separated strings', () => {
   assert.equal(sporfri.cleanUrl('https://a.site.com/x?utm_source=1', { excludedDomains: 'other.com\n*.site.com' }), 'https://a.site.com/x?utm_source=1');
 });
 
+test('URL parsing edge cases (the engine parses URLs itself)', () => {
+  const { cleanUrl } = sporfri;
+  assert.equal(cleanUrl('https://WWW.YouTube.COM/watch?v=a&si=1'), 'https://WWW.YouTube.COM/watch?v=a');
+  assert.equal(cleanUrl('https://user:pw@example.com:8443/a/?utm_source=x'), 'https://user:pw@example.com:8443/a');
+  assert.equal(cleanUrl('http://[::1]:3000/?fbclid=1'), 'http://[::1]:3000/');
+  assert.equal(cleanUrl('https://youtu.be?si=1'), 'https://youtu.be');
+  assert.equal(cleanUrl('https://example.com#utm_source=x'), 'https://example.com');
+  assert.equal(cleanUrl('https://www.google.com/url?q=https%3A%2F%2Fa.com%2F%3Fgclid%3D1&q=https://b.com'), 'https://a.com/');
+  assert.equal(cleanUrl('https://www.google.com/url?q=not-a-link'), 'https://www.google.com/url?q=not-a-link');
+  for (const bad of ['https://', 'https:///a?utm_source=x', 'https://a.com:abc/?utm_source=x', 'https://a b.com/?utm_source=x', 'https://a.com/x y?utm_source=x']) {
+    assert.equal(cleanUrl(bad), bad, bad);
+  }
+});
+
 test('isSingleUrl', () => {
   assert.ok(isSingleUrl(' https://a.com/x?y=1 '));
   assert.ok(!isSingleUrl('see https://a.com'));

@@ -6,10 +6,14 @@ globalThis.Sporfri = (() => {
  * (see rules/rules.json and rules/README.md). Contains no site-specific knowledge.
  *
  * Shared by the Chrome extension, the iOS Scriptable script and the tests.
- * Keep it dependency-free and environment-agnostic, and only use "erasable" TypeScript
+ * Keep it dependency-free and environment-agnostic: plain JavaScript built-ins only, no web APIs
+ * such as URL (JavaScriptCore, used by Scriptable and native Apple apps, doesn't have them).
+ * Only use "erasable" TypeScript
  * (types, interfaces, `as`) so Node can run it directly and the build can strip it to JS.
  * Exports must be `export function` / `export const` (the build turns them into a bundle).
  */
+
+/** The parts of an http(s) URL that rules match on. */
 
 // ---------- Helpers ----------
 
@@ -22,6 +26,8 @@ const DEFAULT_SETTINGS = Object.freeze({
 
 const URL_IN_TEXT = /https?:\/\/[^\s<>"'`]+/gi;
 const SINGLE_URL = /^https?:\/\/\S+$/i;
+// scheme :// [userinfo@] host [:port] [/path] [?query] [#fragment]
+const HTTP_URL = /^https?:\/\/(?:[^\s@\/?#]*@)?(\[[\da-f:.]+\]|[^\s@:\/?#[\]]+)(?::\d{0,5})?(\/[^\s?#]*)?(?:\?([^\s#]*))?(?:#\S*)?$/i;
 
 function hostMatches(host, domain) {
   return host === domain || host.endsWith('.' + domain);
@@ -63,12 +69,17 @@ function safeDecode(str) {
 }
 
 function parseHttpUrl(str) {
-  try {
-    const url = new URL(str);
-    return url.protocol === 'http:' || url.protocol === 'https:' ? url : null;
-  } catch {
-    return null;
+  const m = HTTP_URL.exec(str);
+  return m ? { hostname: m[1].toLowerCase(), pathname: m[2] || '/', query: m[3] || '' } : null;
+}
+
+/** Decoded value of the first query param with this name, like URLSearchParams.get(). */
+function getParam(query, name) {
+  for (const part of query.split('&')) {
+    const eq = part.indexOf('=');
+    if (safeDecode(eq === -1 ? part : part.slice(0, eq)) === name) return eq === -1 ? '' : safeDecode(part.slice(eq + 1));
   }
+  return null;
 }
 
 function compileMatcher(entry, where) {
@@ -168,7 +179,7 @@ function createCleaner(rules) {
     for (const r of R.redirects) {
       if (!r.matches(url)) continue;
       for (const name of r.params) {
-        const target = url.searchParams.get(name);
+        const target = getParam(url.query, name);
         const parsed = target ? parseHttpUrl(target) : null;
         if (target && parsed) return { name: r.name, target, url: parsed };
       }

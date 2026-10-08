@@ -13,7 +13,7 @@
     "install-ios": "node --disable-warning=ExperimentalWarning scripts/build.mjs --install-ios",
     "check": "node scripts/check.mjs",
     "icons": "node scripts/make-icons.mjs",
-    "test": "node --test test/*.test.mjs",
+    "test": "node --disable-warning=ExperimentalWarning scripts/build.mjs && node --test test/*.test.mjs",
     "typecheck": "tsc -p ."
   },
   "devDependencies": {

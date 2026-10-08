@@ -3,7 +3,9 @@
  * (see rules/rules.json and rules/README.md). Contains no site-specific knowledge.
  *
  * Shared by the Chrome extension, the iOS Scriptable script and the tests.
- * Keep it dependency-free and environment-agnostic, and only use "erasable" TypeScript
+ * Keep it dependency-free and environment-agnostic: plain JavaScript built-ins only, no web APIs
+ * such as URL (JavaScriptCore, used by Scriptable and native Apple apps, doesn't have them).
+ * Only use "erasable" TypeScript
  * (types, interfaces, `as`) so Node can run it directly and the build can strip it to JS.
  * Exports must be `export function` / `export const` (the build turns them into a bundle).
  */
@@ -79,7 +81,7 @@ export interface Cleaner {
 
 interface CompiledSite {
   name: string;
-  matches: (url: URL) => boolean;
+  matches: (url: ParsedUrl) => boolean;
   keep: Set<string> | null;
   remove: Set<string>;
   removePrefixes: string[];
@@ -88,7 +90,7 @@ interface CompiledSite {
 
 interface CompiledRedirect {
   name: string;
-  matches: (url: URL) => boolean;
+  matches: (url: ParsedUrl) => boolean;
   params: string[];
 }
 
@@ -99,6 +101,13 @@ interface CompiledRules {
   hashPatterns: RegExp[];
   sites: CompiledSite[];
   redirects: CompiledRedirect[];
+}
+
+/** The parts of an http(s) URL that rules match on. */
+interface ParsedUrl {
+  hostname: string;
+  pathname: string;
+  query: string;
 }
 
 interface Param {
@@ -119,6 +128,8 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
 
 const URL_IN_TEXT = /https?:\/\/[^\s<>"'`]+/gi;
 const SINGLE_URL = /^https?:\/\/\S+$/i;
+// scheme :// [userinfo@] host [:port] [/path] [?query] [#fragment]
+const HTTP_URL = /^https?:\/\/(?:[^\s@\/?#]*@)?(\[[\da-f:.]+\]|[^\s@:\/?#[\]]+)(?::\d{0,5})?(\/[^\s?#]*)?(?:\?([^\s#]*))?(?:#\S*)?$/i;
 
 function hostMatches(host: string, domain: string): boolean {
   return host === domain || host.endsWith('.' + domain);
@@ -159,16 +170,21 @@ function safeDecode(str: string): string {
   }
 }
 
-function parseHttpUrl(str: string): URL | null {
-  try {
-    const url = new URL(str);
-    return url.protocol === 'http:' || url.protocol === 'https:' ? url : null;
-  } catch {
-    return null;
-  }
+function parseHttpUrl(str: string): ParsedUrl | null {
+  const m = HTTP_URL.exec(str);
+  return m ? { hostname: m[1].toLowerCase(), pathname: m[2] || '/', query: m[3] || '' } : null;
 }
 
-function compileMatcher(entry: Matcher, where: string): (url: URL) => boolean {
+/** Decoded value of the first query param with this name, like URLSearchParams.get(). */
+function getParam(query: string, name: string): string | null {
+  for (const part of query.split('&')) {
+    const eq = part.indexOf('=');
+    if (safeDecode(eq === -1 ? part : part.slice(0, eq)) === name) return eq === -1 ? '' : safeDecode(part.slice(eq + 1));
+  }
+  return null;
+}
+
+function compileMatcher(entry: Matcher, where: string): (url: ParsedUrl) => boolean {
   const domains = toList(entry.domains);
   const host = entry.hostPattern ? new RegExp(entry.hostPattern, 'i') : null;
   const path = entry.pathPattern ? new RegExp(entry.pathPattern) : null;
@@ -261,11 +277,11 @@ export function createCleaner(rules: Rules): Cleaner {
     return R.utmDuplicates.includes(p.key) && utmValues.get(p.key) === p.value;
   }
 
-  function unwrapRedirect(url: URL): { name: string; target: string; url: URL } | null {
+  function unwrapRedirect(url: ParsedUrl): { name: string; target: string; url: ParsedUrl } | null {
     for (const r of R.redirects) {
       if (!r.matches(url)) continue;
       for (const name of r.params) {
-        const target = url.searchParams.get(name);
+        const target = getParam(url.query, name);
         const parsed = target ? parseHttpUrl(target) : null;
         if (target && parsed) return { name: r.name, target, url: parsed };
       }
@@ -282,7 +298,7 @@ export function createCleaner(rules: Rules): Cleaner {
     const report: Report = { original: input, url: input, changed: false, removed: [], kept: [], actions: [] };
     if (typeof input !== 'string') return report;
     const opts = normalizeSettings(settings);
-    const isExcluded = (u: URL) => opts.excludedDomains.some((d) => hostMatches(u.hostname, d));
+    const isExcluded = (u: ParsedUrl) => opts.excludedDomains.some((d) => hostMatches(u.hostname, d));
 
     let current = input.trim();
     let url = parseHttpUrl(current);
